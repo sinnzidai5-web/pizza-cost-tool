@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍕 ピザ原価管理ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .tab-btn {
+            padding: 10px 16px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #f0f0f0;
+        }
+        .btn.primary {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        .btn.primary:hover {
+            background: #218838;
+        }
+        .sheet {
+            display: none;
+        }
+        .sheet.active {
+            display: block;
+        }
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #0066cc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        thead {
+            background: #f9f9f9;
+            border-bottom: 2px solid #ddd;
+        }
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 4px rgba(0,123,255,0.25);
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .danger {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+        .warning {
+            color: #ffc107;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .add-row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .add-row-btn:hover {
+            background: #218838;
+        }
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .target-settings {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .target-settings h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #856404;
+        }
+        .target-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .target-input {
+            display: flex;
+            flex-direction: column;
+        }
+        .target-input label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .target-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .rank-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .rank-excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+        .rank-good {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .rank-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .rank-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍕 ピザ原価管理ツール</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchSheet('materials')">① 材料マスタ</button>
+                <button class="tab-btn" onclick="switchSheet('recipe')">② レシピ計算</button>
+                <button class="tab-btn" onclick="switchSheet('menu')">③ メニュー一覧</button>
+                <button class="tab-btn" onclick="switchSheet('settings')">⚙️ 設定</button>
+                <button class="btn" onclick="downloadData()">💾 データダウンロード</button>
+            </div>
+        </div>
+
+        <!-- Sheet 1: 材料マスタ -->
+        <div id="materials" class="sheet active">
+            <h2>🍕 材料マスタ</h2>
+            <div class="info">材料名と1kgあたりの単価を入力してください。自動で100g、10g、1gの単価が計算されます。</div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>材料名</th>
+                        <th style="width: 120px;">単価(円/kg)</th>
+                        <th style="width: 100px;">100g</th>
+                        <th style="width: 100px;">10g</th>
+                        <th style="width: 100px;">1g</th>
+                        <th style="width: 60px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="materials-body">
+                </tbody>
+            </table>
+            
+            <button class="add-row-btn" onclick="addMaterial()">＋ 材料を追加</button>
+        </div>
+
+        <!-- Sheet 2: レシピ原価計算 -->
+        <div id="recipe" class="sheet">
+            <h2>🍕 レシピ別原価計算</h2>
+            <div class="info">メニューのレシピを作成して、原価率・粗利益率を計算します。</div>
+            
+            <div class="input-group">
+                <div class="form-group">
+                    <label>メニュー名</label>
+                    <input type="text" id="recipe-name" placeholder="マルゲリータ Mサイズ" onchange="updateRecipeName()">
+                </div>
+                <div class="form-group">
+                    <label>販売価格（円）</label>
+                    <input type="number" id="recipe-price" placeholder="1200" onchange="updateRecipePrice(); renderRecipe();">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>材料名</th>
+                        <th style="width: 100px;">使用量(g)</th>
+                        <th style="width: 100px;">単価(円/kg)</th>
+                        <th style="width: 100px;">材料費(円)</th>
+                        <th style="width: 60px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="recipe-body">
+                </tbody>
+            </table>
+            
+            <button class="add-row-btn" onclick="addIngredient()">＋ 材料を追加</button>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <div class="summary-label">合計材料費</div>
+                    <div class="summary-value" id="recipe-total-cost">¥0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">販売価格</div>
+                    <div class="summary-value" id="recipe-price-display">¥0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">原価率</div>
+                    <div class="summary-value danger" id="recipe-cost-ratio">—</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;" id="recipe-target-ratio">目標: —</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">粗利益率</div>
+                    <div class="summary-value success" id="recipe-margin-ratio">—</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;" id="recipe-target-margin">目標: —</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sheet 3: メニュー一覧 -->
+        <div id="menu" class="sheet">
+            <h2>🍕 メニュー一覧</h2>
+            <div class="info">各メニューの販売価格・材料費を入力してください。原価率・粗利益が自動で計算されます。</div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>メニュー名</th>
+                        <th style="width: 80px;">サイズ</th>
+                        <th style="width: 100px;">販売価格</th>
+                        <th style="width: 100px;">材料費</th>
+                        <th style="width: 80px;">原価率</th>
+                        <th style="width: 100px;">粗利益</th>
+                        <th style="width: 80px;">利益率</th>
+                        <th style="width: 80px;">評価</th>
+                        <th style="width: 60px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="menu-body">
+                </tbody>
+            </table>
+            
+            <button class="add-row-btn" onclick="addMenu()">＋ メニューを追加</button>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <div class="summary-label">平均販売価格</div>
+                    <div class="summary-value" id="menu-avg-price">¥0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">平均材料費</div>
+                    <div class="summary-value" id="menu-avg-cost">¥0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">平均原価率</div>
+                    <div class="summary-value danger" id="menu-avg-ratio">—</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;" id="menu-target-ratio">目標: —</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">平均利益率</div>
+                    <div class="summary-value success" id="menu-avg-margin">—</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;" id="menu-target-margin">目標: —</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sheet 4: 設定 -->
+        <div id="settings" class="sheet">
+            <h2>⚙️ 目標値の設定</h2>
+            <div class="target-settings">
+                <h3>📊 原価率・利益率の目標値を設定</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                    設定した目標値に対して、メニューの評価が自動で変わります。
+                </p>
+                <div class="target-grid">
+                    <div class="target-input">
+                        <label>目標原価率（優秀）上限 %</label>
+                        <input type="number" id="target-excellent-cost" min="0" max="100" value="25" onchange="saveSettings()">
+                        <div style="font-size: 11px; color: #666; margin-top: 4px;">◎ 優秀の条件</div>
+                    </div>
+                    <div class="target-input">
+                        <label>目標原価率（良好）上限 %</label>
+                        <input type="number" id="target-good-cost" min="0" max="100" value="35" onchange="saveSettings()">
+                        <div style="font-size: 11px; color: #666; margin-top: 4px;">○ 良好の条件</div>
+                    </div>
+                    <div class="target-input">
+                        <label>目標原価率（要注意）上限 %</label>
+                        <input type="number" id="target-warning-cost" min="0" max="100" value="45" onchange="saveSettings()">
+                        <div style="font-size: 11px; color: #666; margin-top: 4px;">△ 要注意の条件</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <h3 style="font-size: 14px; color: #0066cc; margin-bottom: 10px;">📌 評価基準</h3>
+                <table style="width: 100%; font-size: 13px;">
+                    <tr>
+                        <td><span class="rank-badge rank-excellent">◎ 優秀</span></td>
+                        <td>原価率が <span id="display-excellent">25</span>% 以下</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-good">○ 良好</span></td>
+                        <td>原価率が <span id="display-good">26</span>～<span id="display-good-max">35</span>%</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-warning">△ 要注意</span></td>
+                        <td>原価率が <span id="display-warning">36</span>～<span id="display-warning-max">45</span>%</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-danger">✕ 危険</span></td>
+                        <td>原価率が <span id="display-danger">46</span>% 以上</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // データストア
+        let store = {
+            materials: [
+                { name: '薄力粉', price: 200 },
+                { name: '強力粉', price: 250 },
+                { name: 'ドライイースト', price: 1500 },
+                { name: 'モッツァレラチーズ', price: 1200 },
+                { name: 'トマトソース（缶）', price: 300 },
+                { name: 'ピザ用チーズ', price: 900 },
+            ],
+            recipe: { name: '', price: 0, ingredients: [] },
+            menus: [
+                { name: 'マルゲリータ', size: 'M', price: 1200, cost: 280 },
+                { name: 'マルゲリータ', size: 'L', price: 1600, cost: 350 },
+                { name: 'ペパロニ', size: 'M', price: 1400, cost: 330 },
+            ],
+            settings: {
+                excellentCost: 25,
+                goodCost: 35,
+                warningCost: 45
+            }
+        };
+
+        // ローカルストレージから復元
+        function loadData() {
+            const saved = localStorage.getItem('pizza-cost-tool');
+            if (saved) {
+                store = JSON.parse(saved);
+            }
+            loadSettings();
+            renderAll();
+        }
+
+        // ローカルストレージに保存
+        function saveData() {
+            localStorage.setItem('pizza-cost-tool', JSON.stringify(store));
+        }
+
+        // 設定を読み込む
+        function loadSettings() {
+            document.getElementById('target-excellent-cost').value = store.settings.excellentCost || 25;
+            document.getElementById('target-good-cost').value = store.settings.goodCost || 35;
+            document.getElementById('target-warning-cost').value = store.settings.warningCost || 45;
+            updateRankDisplay();
+        }
+
+        // 設定を保存
+        function saveSettings() {
+            store.settings.excellentCost = parseInt(document.getElementById('target-excellent-cost').value) || 25;
+            store.settings.goodCost = parseInt(document.getElementById('target-good-cost').value) || 35;
+            store.settings.warningCost = parseInt(document.getElementById('target-warning-cost').value) || 45;
+            saveData();
+            updateRankDisplay();
+            renderRecipe();
+            renderMenu();
+        }
+
+        // ランク表示を更新
+        function updateRankDisplay() {
+            const excellent = store.settings.excellentCost;
+            const good = store.settings.goodCost;
+            const warning = store.settings.warningCost;
+            
+            document.getElementById('display-excellent').textContent = excellent;
+            document.getElementById('display-good').textContent = excellent + 1;
+            document.getElementById('display-good-max').textContent = good;
+            document.getElementById('display-warning').textContent = good + 1;
+            document.getElementById('display-warning-max').textContent = warning;
+            document.getElementById('display-danger').textContent = warning + 1;
+        }
+
+        // 評価を判定
+        function getRank(costRatio) {
+            const ratio = parseFloat(costRatio);
+            if (isNaN(ratio)) return { label: '—', class: '' };
+            
+            const excellent = store.settings.excellentCost;
+            const good = store.settings.goodCost;
+            const warning = store.settings.warningCost;
+            
+            if (ratio <= excellent) {
+                return { label: '◎ 優秀', class: 'rank-excellent' };
+            } else if (ratio <= good) {
+                return { label: '○ 良好', class: 'rank-good' };
+            } else if (ratio <= warning) {
+                return { label: '△ 要注意', class: 'rank-warning' };
+            } else {
+                return { label: '✕ 危険', class: 'rank-danger' };
+            }
+        }
+
+        // 数値をフォーマット
+        function formatPrice(num) {
+            if (isNaN(num) || num === null) return '¥0';
+            return '¥' + Math.round(num).toLocaleString('ja-JP');
+        }
+
+        function formatPercent(num) {
+            if (isNaN(num) || num === null || num === undefined) return '—';
+            return (Math.round(num * 1000) / 10) + '%';
+        }
+
+        // シート切り替え
+        function switchSheet(sheet) {
+            document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+            document.getElementById(sheet).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (sheet === 'recipe') renderRecipe();
+            if (sheet === 'menu') renderMenu();
+            if (sheet === 'settings') loadSettings();
+        }
+
+        // === 材料マスタ ===
+        function renderMaterials() {
+            const body = document.getElementById('materials-body');
+            body.innerHTML = store.materials.map((m, i) => {
+                const kg100 = m.price ? (m.price / 10).toFixed(1) : '—';
+                const kg10 = m.price ? (m.price / 100).toFixed(2) : '—';
+                const kg1 = m.price ? (m.price / 1000).toFixed(3) : '—';
+                return `
+                    <tr>
+                        <td><input type="text" value="${m.name}" onchange="store.materials[${i}].name = this.value; saveData(); renderMaterials();"></td>
+                        <td><input type="number" value="${m.price || ''}" onchange="store.materials[${i}].price = parseInt(this.value) || 0; saveData(); renderMaterials();"></td>
+                        <td>${kg100}</td>
+                        <td>${kg10}</td>
+                        <td>${kg1}</td>
+                        <td><button class="delete-btn" onclick="deleteMaterial(${i})">削除</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function addMaterial() {
+            store.materials.push({ name: '', price: 0 });
+            saveData();
+            renderMaterials();
+        }
+
+        function deleteMaterial(i) {
+            if (confirm('この材料を削除しますか？')) {
+                store.materials.splice(i, 1);
+                saveData();
+                renderMaterials();
+            }
+        }
+
+        // === レシピ ===
+        function renderRecipe() {
+            const body = document.getElementById('recipe-body');
+            document.getElementById('recipe-name').value = store.recipe.name || '';
+            document.getElementById('recipe-price').value = store.recipe.price || '';
+
+            body.innerHTML = (store.recipe.ingredients || []).map((ing, i) => {
+                const material = store.materials.find(m => m.name === ing.name);
+                const unitPrice = material ? material.price : 0;
+                const cost = ing.qty && unitPrice ? (ing.qty / 1000 * unitPrice) : 0;
+                return `
+                    <tr>
+                        <td>
+                            <select onchange="store.recipe.ingredients[${i}].name = this.value; saveData(); renderRecipe();">
+                                <option value="">選択</option>
+                                ${store.materials.map(m => `<option value="${m.name}" ${ing.name === m.name ? 'selected' : ''}>${m.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td><input type="number" value="${ing.qty || ''}" placeholder="0" onchange="store.recipe.ingredients[${i}].qty = parseInt(this.value) || 0; saveData(); renderRecipe();"></td>
+                        <td>${unitPrice ? unitPrice.toLocaleString('ja-JP') : '—'}</td>
+                        <td>${cost ? Math.round(cost) : '—'}</td>
+                        <td><button class="delete-btn" onclick="deleteIngredient(${i})">削除</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            const totalCost = (store.recipe.ingredients || []).reduce((sum, ing) => {
+                const m = store.materials.find(x => x.name === ing.name);
+                return sum + (ing.qty && m ? (ing.qty / 1000 * m.price) : 0);
+            }, 0);
+
+            document.getElementById('recipe-total-cost').textContent = formatPrice(totalCost);
+            document.getElementById('recipe-price-display').textContent = formatPrice(store.recipe.price || 0);
+            const ratio = store.recipe.price > 0 ? (totalCost / store.recipe.price) : 0;
+            document.getElementById('recipe-cost-ratio').textContent = formatPercent(ratio);
+            document.getElementById('recipe-margin-ratio').textContent = formatPercent(1 - ratio);
+            
+            document.getElementById('recipe-target-ratio').textContent = '目標: ' + store.settings.excellentCost + '%以下';
+            document.getElementById('recipe-target-margin').textContent = '目標: ' + (100 - store.settings.excellentCost) + '%以上';
+        }
+
+        function updateRecipeName() {
+            store.recipe.name = document.getElementById('recipe-name').value;
+            saveData();
+        }
+
+        function updateRecipePrice() {
+            store.recipe.price = parseInt(document.getElementById('recipe-price').value) || 0;
+            saveData();
+        }
+
+        function addIngredient() {
+            if (!store.recipe.ingredients) store.recipe.ingredients = [];
+            store.recipe.ingredients.push({ name: '', qty: 0 });
+            saveData();
+            renderRecipe();
+        }
+
+        function deleteIngredient(i) {
+            if (confirm('この材料を削除しますか？')) {
+                store.recipe.ingredients.splice(i, 1);
+                saveData();
+                renderRecipe();
+            }
+        }
+
+        // === メニュー一覧 ===
+        function renderMenu() {
+            const body = document.getElementById('menu-body');
+            body.innerHTML = store.menus.map((menu, i) => {
+                const costRatio = menu.price > 0 ? (menu.cost / menu.price) : 0;
+                const margin = menu.price - menu.cost;
+                const marginRatio = menu.price > 0 ? (margin / menu.price) : 0;
+                const rank = getRank(costRatio * 100);
+                return `
+                    <tr>
+                        <td><input type="text" value="${menu.name}" onchange="store.menus[${i}].name = this.value; saveData();"></td>
+                        <td><input type="text" value="${menu.size}" style="text-align: center;" onchange="store.menus[${i}].size = this.value; saveData();"></td>
+                        <td><input type="number" value="${menu.price}" onchange="store.menus[${i}].price = parseInt(this.value) || 0; saveData(); renderMenu();"></td>
+                        <td><input type="number" value="${menu.cost}" onchange="store.menus[${i}].cost = parseInt(this.value) || 0; saveData(); renderMenu();"></td>
+                        <td style="text-align: center; color: ${costRatio > store.settings.goodCost / 100 ? '#dc3545' : '#28a745'};">${formatPercent(costRatio * 100)}</td>
+                        <td style="text-align: right;">${formatPrice(margin)}</td>
+                        <td style="text-align: center; color: #28a745;">${formatPercent(marginRatio * 100)}</td>
+                        <td><span class="rank-badge ${rank.class}">${rank.label}</span></td>
+                        <td><button class="delete-btn" onclick="deleteMenu(${i})">削除</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            const avgPrice = store.menus.length > 0 ? store.menus.reduce((s, m) => s + m.price, 0) / store.menus.length : 0;
+            const avgCost = store.menus.length > 0 ? store.menus.reduce((s, m) => s + m.cost, 0) / store.menus.length : 0;
+            const avgRatio = avgPrice > 0 ? (avgCost / avgPrice) : 0;
+            const avgMargin = avgPrice - avgCost;
+
+            document.getElementById('menu-avg-price').textContent = formatPrice(avgPrice);
+            document.getElementById('menu-avg-cost').textContent = formatPrice(avgCost);
+            document.getElementById('menu-avg-ratio').textContent = formatPercent(avgRatio * 100);
+            document.getElementById('menu-avg-margin').textContent = formatPercent(avgMargin > 0 ? (avgMargin / avgPrice * 100) : 0);
+            
+            document.getElementById('menu-target-ratio').textContent = '目標: ' + store.settings.excellentCost + '%以下';
+            document.getElementById('menu-target-margin').textContent = '目標: ' + (100 - store.settings.excellentCost) + '%以上';
+        }
+
+        function addMenu() {
+            store.menus.push({ name: '', size: '', price: 0, cost: 0 });
+            saveData();
+            renderMenu();
+        }
+
+        function deleteMenu(i) {
+            if (confirm('このメニューを削除しますか？')) {
+                store.menus.splice(i, 1);
+                saveData();
+                renderMenu();
+            }
+        }
+
+        // データのダウンロード
+        function downloadData() {
+            const json = JSON.stringify(store, null, 2);
+            const blob = new Blob([json], { type: 'application/json; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pizza_cost_data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // すべてレンダリング
+        function renderAll() {
+            renderMaterials();
+            renderRecipe();
+            renderMenu();
+        }
+
+        // 初期化
+        loadData();
+    </script>
+</body>
+</html>
